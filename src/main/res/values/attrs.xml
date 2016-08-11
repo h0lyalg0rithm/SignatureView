@@ -2,5 +2,7 @@
 <resources>
     <declare-styleable name="SignatureView">
         <attr name="minPenWidth" format="dimension"/>
+        <attr name="penColor" format="color"/>
+        <attr name="backgroundColor" format="color"/>
     </declare-styleable>
 </resources>
