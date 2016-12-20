@@ -27,6 +27,10 @@ public class SignatureView extends View {
     private int backgroundColor;
     private Canvas drawCanvas;
     private Bitmap canvasBitmap;
+
+
+    private float maxTop = Float.MAX_VALUE;
+    private float maxBottom = Float.MIN_VALUE;
     SignatureListener listener;
 
     public SignatureView(Context context, AttributeSet attrs) {
@@ -38,9 +42,9 @@ public class SignatureView extends View {
                 R.styleable.SignatureView,
                 0, 0);
 
-        penMinWidth      = typedArray.getDimensionPixelSize(convertDpToPx(R.styleable.SignatureView_minPenWidth), convertDpToPx(4));
-        backgroundColor  = typedArray.getColor(R.styleable.SignatureView_backgroundColor, Color.TRANSPARENT);
-        penColor         = typedArray.getColor(R.styleable.SignatureView_penColor, Color.BLACK);
+        penMinWidth = typedArray.getDimensionPixelSize(convertDpToPx(R.styleable.SignatureView_minPenWidth), convertDpToPx(4));
+        backgroundColor = typedArray.getColor(R.styleable.SignatureView_backgroundColor, Color.TRANSPARENT);
+        penColor = typedArray.getColor(R.styleable.SignatureView_penColor, Color.BLACK);
 
         drawPath = new Path();
         drawPaint = new Paint();
@@ -61,7 +65,7 @@ public class SignatureView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         drawCanvas = new Canvas(canvasBitmap);
-        if(listener != null)
+        if (listener != null)
             listener.onViewChanged();
     }
 
@@ -72,10 +76,10 @@ public class SignatureView extends View {
         canvas.drawPath(drawPath, drawPaint);
     }
 
-    public Canvas startNew(){
+    public Canvas startNew() {
         drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
         invalidate();
-        if(listener != null)
+        if (listener != null)
             listener.onCleared();
         return drawCanvas;
     }
@@ -84,7 +88,7 @@ public class SignatureView extends View {
         return drawCanvas;
     }
 
-    public void setPenColor(int color){
+    public void setPenColor(int color) {
         penColor = color;
         drawPaint.setColor(penColor);
     }
@@ -95,11 +99,17 @@ public class SignatureView extends View {
         float touchX = event.getX();
         float touchY = event.getY();
 
+        if (this.maxTop >= touchY) {
+            this.maxTop = touchY;
+        }
+        if (this.maxBottom <= touchY) {
+            this.maxBottom = touchY;
+        }
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 drawPath.moveTo(touchX, touchY);
-                if(event.getHistorySize() == 0)
-                    drawCanvas.drawPoint(touchX, touchY,drawPaint);
+                if (event.getHistorySize() == 0)
+                    drawCanvas.drawPoint(touchX, touchY, drawPaint);
                 listener.onSignatureStarted();
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -117,21 +127,21 @@ public class SignatureView extends View {
         return true;
     }
 
-    public Bitmap toBitmap(){
+    public Bitmap toBitmap() {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         canvasBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
         return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
     }
 
-    public Bitmap toBitmap(int scaled, int quality){
+    public Bitmap toBitmap(int scaled, int quality) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         canvasBitmap.compress(Bitmap.CompressFormat.PNG, quality, stream);
         byte[] byteArray = stream.toByteArray();
         return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
     }
 
-    private int convertDpToPx(float dp){
+    private int convertDpToPx(float dp) {
         return Math.round(getContext().getResources().getDisplayMetrics().density * dp);
     }
 
@@ -141,7 +151,19 @@ public class SignatureView extends View {
 
     public interface SignatureListener {
         void onSignatureStarted();
+
         void onViewChanged();
+
         void onCleared();
+    }
+
+
+    public Float getMaxTop() {
+        return maxTop;
+    }
+
+
+    public Float getMaxBottom() {
+        return maxBottom;
     }
 }
